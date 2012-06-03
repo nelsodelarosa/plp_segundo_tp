@@ -90,7 +90,6 @@ camino(I, F, [I,F], V):- llega(I,F,_), \+(member(F,V)).
 camino(I, F, [I|T], V):- llega(I,Z,_), \+(member(Z,V)), camino(Z,F,T,[Z|V]).
 
 
-
 %esRuta(R):- pasaTiempo(R).
 
 %viajeSinCiclos(+Origen,?Destino,-Recorrido,-Tiempo)
@@ -100,6 +99,16 @@ viajeSinCiclos(O,D,R,X):- esCamino(O,D,R),tiempoRecorrido(R,X).
 
 
 % viajeMasCorto(+Origen,+Destino,-Recorrido,-Tiempo)
+
+menorTiempo([A],A).
+menorTiempo([A|Ts],X ):- tiempoRecorrido(A,Ta), tiempoRecorrido(X,Tx),Ta >= Tx, menorTiempo(Ts,X). 
+
+%viajeMasCorto(O,D,R,T):- viajeSinCiclos(O,D,R1,_),viajeSinCiclos(O,D,R,_),tiempoRecorrido(R1,T1),tiempoRecorrido(R,T),  T1 >T.
+
+
+
+
+
 
 % grafoCorrecto
 
