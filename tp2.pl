@@ -103,7 +103,9 @@ viajeSinCiclos(O,D,R,X):- esCamino(O,D,R),tiempoRecorrido(R,X).
 menorTiempo([A],A).
 menorTiempo([A|Ts],X ):- tiempoRecorrido(A,Ta), tiempoRecorrido(X,Tx),Ta >= Tx, menorTiempo(Ts,X). 
 
-%viajeMasCorto(O,D,R,T):- viajeSinCiclos(O,D,R1,_),viajeSinCiclos(O,D,R,_),tiempoRecorrido(R1,T1),tiempoRecorrido(R,T),  T1 >T.
+viajeMasCorto(O,D,R,T):- esCamino(O,D,R),esCamino(O,D,R1),tiempoRecorrido(R1,T1),tiempoRecorrido(R,T), T1 >=T.
+%bagof(R1,esCamino(O,D,R1),Viajes),menorTiempo(Viajes,R),tiempoRecorrido(R,T).
+
 
 
 
