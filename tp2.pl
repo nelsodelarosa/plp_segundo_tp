@@ -82,7 +82,7 @@ esRutaSC([_]).
 esRutaSC([X,Y|Ts]):-  llega(X,Y,_), esRutaSC([Y|Ts]),not(member(X,[Y|Ts])).
 
 esCamino(Ini,Fin,Camino):-camino(Ini,Fin,Camino,[Ini]).
-
+camino(X,X,[X],[X]).
 camino(I, F, [I,F], V):- llega(I,F,_), \+(member(F,V)).
 camino(I, F, [I|T], V):- llega(I,Z,_), \+(member(Z,V)), camino(Z,F,T,[Z|V]).
 
@@ -100,7 +100,7 @@ viajeSinCiclos(O,D,R,X):- esCamino(O,D,R),tiempoRecorrido(R,X).
 menorTiempo([A],A).
 menorTiempo([A|Ts],X ):- tiempoRecorrido(A,Ta), tiempoRecorrido(X,Tx),Ta >= Tx, menorTiempo(Ts,X). 
 
-
+viajeMasCorto(O,O,[O],0).
 viajeMasCorto(O,D,R,T):- esCamino(O,D,R),esCamino(O,D,R1),R \= R1,tiempoRecorrido(R1,T1),tiempoRecorrido(R,T), T1 >=T.
 %bagof(R1,esCamino(O,D,R1),Viajes),menorTiempo(Viajes,R),tiempoRecorrido(R,T).
 
@@ -109,11 +109,10 @@ viajeMasCorto(O,D,R,T):- esCamino(O,D,R),esCamino(O,D,R1),R \= R1,tiempoRecorrid
 alcanzaALasDemas(X,[]).
 alcanzaALasDemas(X,[Y|Ys]):- camino(X,Y,R,[X]),alcanzaALasDemas(X,Ys).
 
+todasLLeganA([],Y).
 todasLLeganA([X|Xs],Y):- camino(X,Y,R,[X]),todasLLeganA(Xs,Y).
 
-%llegaALista(X,[]).
-%llegaALista(X,[Y|Ys]):-esCamino(X,Y,R),X \=Y,llegaALista(X,Ys).
-
+grafoCorrecto:- ciudades(L),member(X,L),alcanzaALasDemas(X,L),todasLLeganA(L,X). 
 
 
 
