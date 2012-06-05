@@ -41,10 +41,7 @@ ciudad(cordoba).
 %% Predicados pedidos:
 
 % ciudades(-Ciudades)
-ciudades(X):-ciudad(X).
-
-
-
+ciudades(Xs):- setof(X,Y^Z^llega(X,Y,Z),Xs).
 
 
 % viajeDesde(+Origen,?Destino,-Recorrido,-Tiempo) -- Devuelve infinitos resultados.
@@ -108,12 +105,19 @@ viajeMasCorto(O,D,R,T):- esCamino(O,D,R),esCamino(O,D,R1),R \= R1,tiempoRecorrid
 %bagof(R1,esCamino(O,D,R1),Viajes),menorTiempo(Viajes,R),tiempoRecorrido(R,T).
 
 
-
-
-
-
-
 % grafoCorrecto
+alcanzaALasDemas(X,[]).
+alcanzaALasDemas(X,[Y|Ys]):- camino(X,Y,R,[X]),alcanzaALasDemas(X,Ys).
+
+todasLLeganA([X|Xs],Y):- camino(X,Y,R,[X]),todasLLeganA(Xs,Y).
+
+%llegaALista(X,[]).
+%llegaALista(X,[Y|Ys]):-esCamino(X,Y,R),X \=Y,llegaALista(X,Ys).
+
+
+
+
+
 
 % cubreDistancia(+Recorrido, ?Avion)
 
