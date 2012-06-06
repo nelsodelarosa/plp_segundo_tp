@@ -138,6 +138,32 @@ viajeMasCorto(Ciudad1,Ciudad2,R,Tiempo), cubreDistancia(R,Avion).
 %(cordoba, [airbus_a320]), (atlanta, [boeing_747])].
 
 
+%algunas pruebas
+t1:- ciudades(X), X == [atlanta, buenos_aires, cordoba, lisboa, madrid, mdq, new_york, rio, salta].
+
+t2:- viajeSinCiclos(buenos_aires,buenos_aires,X,T), X==[buenos_aires], T == 0.
+t2:- viajeSinCiclos(buenos_aires,lisboa,X,T), X==[buenos_aires, madrid, lisboa], T == 13.
+t2:- viajeSinCiclos(buenos_aires,lisboa,X,T), X==[buenos_aires, atlanta, new_york, madrid, lisboa], T == 24.
+t2:- viajeSinCiclos(buenos_aires,lisboa,X,T), X==[buenos_aires, rio, new_york, madrid, lisboa], T == 24.
+
+t3:- viajeSinCiclos(rio,buenos_aires,X,T), X==[rio, buenos_aires], T == 4.
+t3:- viajeSinCiclos(rio,buenos_aires,X,T), X==[rio, new_york, madrid, buenos_aires], T == 31.
+t3:- viajeSinCiclos(rio,buenos_aires,X,T), X==[rio, new_york, buenos_aires], T == 21.
+
+t4:- viajeMasCorto(buenos_aires,lisboa, R,T), R==[buenos_aires, madrid, lisboa], T ==13.
+t5:- viajeMasCorto(rio,buenos_aires, R,T), R==[rio, buenos_aires], T == 4.
+t5:- viajeMasCorto(buenos_aires,new_york,R,T), R==[buenos_aires, atlanta, new_york], T == 14.
+t5:- viajeMasCorto(buenos_aires,new_york,R,T), R==[buenos_aires, rio, new_york], T == 14.
+
+t5:- viajeMasCorto(X,X,R,T), R==[X], T == 0.
+
+t6:- grafoCorrecto.
+t7:- assert(llega(cordoba, roma, 16)).
+t8:- grafoCorrecto.
+
+t9:- cubreDistancia([rio, new_york, madrid, buenos_aires],X ), X==boeing_767.
+t9:- cubreDistancia([atlanta, new_york, madrid, lisboa],X ), X==boeing_767.
+t9:- cubreDistancia([atlanta, new_york, madrid, lisboa],X ), X==airbus_a320.
 
 % Descomentar si se usa un archivo separado para las pruebas.
 % - [pruebas].
