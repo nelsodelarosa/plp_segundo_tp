@@ -46,12 +46,6 @@ ciudades(Xs):- setof(X,Y^Z^llega(X,Y,Z),Xs).
 
 % viajeDesde(+Origen,?Destino,-Recorrido,-Tiempo) -- Devuelve infinitos resultados.
 
-%ultimo([X],X).
-%ultimo([ Z,Y| T],X) :- ultimo([Y|T],X).
-
-
-
-
 %primero([X],X).
 primero([X|_],X).
 
@@ -65,10 +59,7 @@ ultimo(L,R):- append(_,[R],L).
 
 viajeDesde(O,D,R,X):- primero(R,O), ultimo(R,D),  esRuta(R),tiempoRecorrido(R,X).
 
-%pasaTiempo([_],[0]).
-%pasaTiempo([X,Y|Xs],[T|Ts]):- llega(X,Y,T), pasaTiempo([Y|Xs],Ts).
 
-%tiempoRecorrido(R,X):-pasaTiempo(R,L), suma(L,X).
 tiempoRecorrido([X],0).
 tiempoRecorrido([X,Y|L],T):- llega(X,Y,Z),tiempoRecorrido([Y|L],K), T is K+Z.
 
@@ -76,51 +67,72 @@ esRuta([_]).
 esRuta([X,Y|Ts]):- llega(X,Y,_),esRuta([Y|Ts]).
 
 
-
 esRutaSC([_]).
-%esRutaSR([X,Y|Ts]):- X\=Y, llega(X,Y,_),ultimo([Y|Ts],Z),append(L2,[Z],[Y|Ts]),not(member(Z,[X,Y|L2])), esRutaSR([Y|Ts]).
 esRutaSC([X,Y|Ts]):-  llega(X,Y,_), esRutaSC([Y|Ts]),not(member(X,[Y|Ts])).
 
-esCamino(Ini,Fin,Camino):-camino(Ini,Fin,Camino,[Ini]).
-camino(X,X,[X],[X]).
-camino(I, F, [I,F], V):- llega(I,F,_), \+(member(F,V)).
-camino(I, F, [I|T], V):- llega(I,Z,_), \+(member(Z,V)), camino(Z,F,T,[Z|V]).
-
-
-%esRuta(R):- pasaTiempo(R).
-
 %viajeSinCiclos(+Origen,?Destino,-Recorrido,-Tiempo)
-%viajeSinCiclos(O,D,R,X):- primero(R,O),ultimo(R,D), esRutaSC(R),tiempoRecorrido(R,X).
+%viajeSinCiclos(O,D,R,X):- esCamino(O,D,R),tiempoRecorrido(R,X).
 
-viajeSinCiclos(O,D,R,X):- esCamino(O,D,R),tiempoRecorrido(R,X).
-
+viajeSinCiclos(O,D,R,X):- primero(R,O), esRutaSC(R, []), tiempoRecorrido(R,X), ultimo(R,D).
+esRutaSC([X], F2):-not(member(X,F2)).
+esRutaSC([X,Y|Ts], F):- llega(X,Y,_), not(member(X,F)), append([X],F,F2), esRutaSC([Y|Ts], F2).
 
 % viajeMasCorto(+Origen,+Destino,-Recorrido,-Tiempo)
 
-menorTiempo([A],A).
-menorTiempo([A|Ts],X ):- tiempoRecorrido(A,Ta), tiempoRecorrido(X,Tx),Ta >= Tx, menorTiempo(Ts,X). 
+viajes(O,D,Rs):-setof(RR,Y^viajeSinCiclos(O,D,RR,Y),Rs).
 
-viajeMasCorto(O,O,[O],0).
-viajeMasCorto(O,D,R,T):- esCamino(O,D,R),esCamino(O,D,R1),R \= R1,tiempoRecorrido(R1,T1),tiempoRecorrido(R,T), T1 >=T.
-%bagof(R1,esCamino(O,D,R1),Viajes),menorTiempo(Viajes,R),tiempoRecorrido(R,T).
+%menorTiempo([A],A,T):- tiempoRecorrido(A,T).
+%menorTiempo([A,B|Ts],X,T ):- tiempoRecorrido(A,Ta), tiempoRecorrido(B,Tb),Ta >= Tb, menorTiempo([B|Ts],X,T). 
+%menorTiempo([A,B|Ts],X,T ):- tiempoRecorrido(A,Ta), tiempoRecorrido(B,Tb),Ta < Tb, menorTiempo([A|Ts],X,T). 
 
+menorTiempo([A],T):- tiempoRecorrido(A,T).
+menorTiempo([A,B|Ts],T):- tiempoRecorrido(A,Ta), tiempoRecorrido(B,Tb),Ta >= Tb, menorTiempo([B|Ts],T). 
+menorTiempo([A,B|Ts],T):- tiempoRecorrido(A,Ta), tiempoRecorrido(B,Tb),Ta < Tb, menorTiempo([A|Ts],T). 
+
+viajeMasCorto(O,D,R,T):- viajes(O,D,Rs), menorTiempo(Rs,T),member(R,Rs),tiempoRecorrido(R,T).
 
 % grafoCorrecto
+
 alcanzaALasDemas(X,[]).
-alcanzaALasDemas(X,[Y|Ys]):- camino(X,Y,R,[X]),alcanzaALasDemas(X,Ys).
+alcanzaALasDemas(X,[Y|Ys]):- viajeSinCiclos(X,Y,_,_),alcanzaALasDemas(X,Ys).
 
 todasLLeganA([],Y).
-todasLLeganA([X|Xs],Y):- camino(X,Y,R,[X]),todasLLeganA(Xs,Y).
+todasLLeganA([X|Xs],Y):- viajeSinCiclos(X,Y,_,_),todasLLeganA(Xs,Y).
 
 grafoCorrecto:- ciudades(L),member(X,L),alcanzaALasDemas(X,L),todasLLeganA(L,X). 
 
 
-
-
-
 % cubreDistancia(+Recorrido, ?Avion)
 
+cubreDistancia([ _ ],_).
+cubreDistancia([X,Y|Rs], A):- llega(X,Y,T),autonomia(A,Auto), T =< Auto, cubreDistancia([Y|Rs],A).   
+
 % vueloSinTransbordo(+Aerolinea, +Ciudad1, +Ciudad2, ?Tiempo, ?Avion)
+
+aviones(Xs):- setof(A, Y^autonomia(A,Y),Xs).
+
+sonAviones([]).
+sonAviones([X|Xs]):- aviones(Aviones), member(X,Aviones),sonAviones(Xs).
+
+esAerolinea([]).
+esAerolinea([(C,L)|Aes]):- ciudades(Ciudades),member(C,Ciudades),sonAviones(L),esAerolinea(Aes).  
+
+estaEnCiudad(A,Ciudad,[(C,L)|Aero]):- Ciudad == C, member(A,L).  
+estaEnCiudad(A,Ciudad,[(C,L)|Aero]):- Ciudad \= C , estaEnCiudad(A,Ciudad,[Aero]).
+
+
+vueloSinTransbordo(Aero, Ciudad1, Ciudad2, Tiempo, Avion):- esAerolinea(Aero), 
+ciudades(Ciudades), member(Ciudad1,Ciudades),member(Ciudad2,Ciudades), estaEnCiudad(Avion,Ciudad1,Aero),
+viajeMasCorto(Ciudad1,Ciudad2,R,Tiempo), cubreDistancia(R,Avion).														
+
+
+%avionesDeAerolinea(Aero,Xs):- setof(A, Y^estaEnCiudad(A,Y,Aero),Xs).
+
+%ejemplo
+%[(rio,[airbus_a320]), (buenos_aires, [airbus_a320, boeing_767]),
+%(cordoba, [airbus_a320]), (atlanta, [boeing_747])].
+
+
 
 % Descomentar si se usa un archivo separado para las pruebas.
 % - [pruebas].
