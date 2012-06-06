@@ -76,10 +76,9 @@ esRuta([_]).
 esRuta([X,Y|Ts]):- llega(X,Y,_),esRuta([Y|Ts]).
 
 
-
-esRutaSC([_]).
+esRutaSC([X], F2):-not(member(X,F2)).
 %esRutaSR([X,Y|Ts]):- X\=Y, llega(X,Y,_),ultimo([Y|Ts],Z),append(L2,[Z],[Y|Ts]),not(member(Z,[X,Y|L2])), esRutaSR([Y|Ts]).
-esRutaSC([X,Y|Ts]):-  llega(X,Y,_), esRutaSC([Y|Ts]),not(member(X,[Y|Ts])).
+esRutaSC([X,Y|Ts], F):- llega(X,Y,_), not(member(X,F)), append([X],F,F2), esRutaSC([Y|Ts], F2).
 
 esCamino(Ini,Fin,Camino):-camino(Ini,Fin,Camino,[Ini]).
 camino(X,X,[X],[X]).
@@ -90,9 +89,9 @@ camino(I, F, [I|T], V):- llega(I,Z,_), \+(member(Z,V)), camino(Z,F,T,[Z|V]).
 %esRuta(R):- pasaTiempo(R).
 
 %viajeSinCiclos(+Origen,?Destino,-Recorrido,-Tiempo)
-%viajeSinCiclos(O,D,R,X):- primero(R,O),ultimo(R,D), esRutaSC(R),tiempoRecorrido(R,X).
+viajeSinCiclos(O,D,R,X):- primero(R,O), esRutaSC(R, []), tiempoRecorrido(R,X), ultimo(R,D).
 
-viajeSinCiclos(O,D,R,X):- esCamino(O,D,R),tiempoRecorrido(R,X).
+%viajeSinCiclos(O,D,R,X):- esCamino(O,D,R),tiempoRecorrido(R,X).
 
 
 % viajeMasCorto(+Origen,+Destino,-Recorrido,-Tiempo)
