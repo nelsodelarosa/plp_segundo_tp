@@ -17,7 +17,7 @@ llega(madrid, lisboa, 1).
 llega(madrid, buenos_aires, 12).
 llega(lisboa, madrid, 1).
 llega(new_york, buenos_aires, 11).
-llega(cordoba, roma, 16).
+
 
 
 %% Aviones y sus autonomías.
@@ -31,19 +31,8 @@ autonomia(boeing_747, 10).
 %% Predicados pedidos:
 
 % ciudades(-Ciudades)
-ciudadesQueAlcanzan(Xs):-setof(X,Y^Z^llega(X,Y,Z),Xs).
 
-%ciudadesSonAlcanzadas(Xs):- setof(X,Y^Z^llega(Y,X,Z),Ls) .
-
-esCiudad(X):- llega(_,X,_).
-%esCiudad(X):- llega(X,_,_).
-destino(X):- llega(X,_,_).
-
-destinos(Xs):-setof(X,esCiudad(X),Xs).
-
-ciudades(Xs):- setof(X,(Y^Z^llega(X,Y,Z),Xs).
-
-
+ciudades(Xs):- setof(X,Y^Z^llega(X,Y,Z),Xs).
 
 
 % viajeDesde(+Origen,?Destino,-Recorrido,-Tiempo) -- Devuelve infinitos resultados.
