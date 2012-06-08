@@ -18,6 +18,11 @@ llega(madrid, buenos_aires, 12).
 llega(lisboa, madrid, 1).
 llega(new_york, buenos_aires, 11).
 
+%agrega un triangulo dirigido deberia dar false grafoCorrecto
+%no lo pude hacer con los assert y retract 
+%llega(paris , roma, 1).
+%llega(roma, edimburgo, 1).
+%llega(edimburgo, paris, 1).
 
 
 %% Aviones y sus autonomías.
@@ -32,6 +37,7 @@ autonomia(boeing_747, 10).
 
 % ciudades(-Ciudades)
 
+%asumo que todo nodo n d_out(n) >0. Consultado con gaby
 ciudades(Xs):- setof(X,Y^Z^llega(X,Y,Z),Xs).
 
 
@@ -67,10 +73,6 @@ viajeSinCiclos(O,D,R,X):- primero(R,O), esRutaSC(R, []), tiempoRecorrido(R,X), u
 
 viajes(O,D,Rs):-setof(RR,Y^viajeSinCiclos(O,D,RR,Y),Rs).
 
-%menorTiempo([A],A,T):- tiempoRecorrido(A,T).
-%menorTiempo([A,B|Ts],X,T ):- tiempoRecorrido(A,Ta), tiempoRecorrido(B,Tb),Ta >= Tb, menorTiempo([B|Ts],X,T). 
-%menorTiempo([A,B|Ts],X,T ):- tiempoRecorrido(A,Ta), tiempoRecorrido(B,Tb),Ta < Tb, menorTiempo([A|Ts],X,T). 
-
 menorTiempo([A],T):- tiempoRecorrido(A,T).
 menorTiempo([A,B|Ts],T):- tiempoRecorrido(A,Ta), tiempoRecorrido(B,Tb),Ta >= Tb, menorTiempo([B|Ts],T). 
 menorTiempo([A,B|Ts],T):- tiempoRecorrido(A,Ta), tiempoRecorrido(B,Tb),Ta < Tb, menorTiempo([A|Ts],T). 
@@ -104,7 +106,8 @@ esAerolinea([]).
 esAerolinea([(C,L)|Aes]):- ciudades(Ciudades),member(C,Ciudades),sonAviones(L),esAerolinea(Aes).  
 
 estaEnCiudad(A,Ciudad,[(C,L)|Aero]):- Ciudad == C, member(A,L).  
-estaEnCiudad(A,Ciudad,[(C,L)|Aero]):- Ciudad \= C , estaEnCiudad(A,Ciudad,[Aero]).
+estaEnCiudad(A,Ciudad,[(C,L)|Aero]):- Ciudad \= C , estaEnCiudad(A,Ciudad,Aero).
+
 
 
 vueloSinTransbordo(Aero, Ciudad1, Ciudad2, Tiempo, Avion):- esAerolinea(Aero), 
@@ -115,8 +118,7 @@ viajeMasCorto(Ciudad1,Ciudad2,R,Tiempo), cubreDistancia(R,Avion).
 %avionesDeAerolinea(Aero,Xs):- setof(A, Y^estaEnCiudad(A,Y,Aero),Xs).
 
 %ejemplo
-%[(rio,[airbus_a320]), (buenos_aires, [airbus_a320, boeing_767]),
-%(cordoba, [airbus_a320]), (atlanta, [boeing_747])].
+%[(rio,[airbus_a320]), (buenos_aires, [airbus_a320, boeing_767]),(cordoba, [airbus_a320]), (atlanta, [boeing_747])].
 
 
 %algunas pruebas
@@ -138,20 +140,23 @@ t5:- viajeMasCorto(buenos_aires,new_york,R,T), R==[buenos_aires, rio, new_york],
 
 t5:- viajeMasCorto(X,X,R,T), R==[X], T == 0.
 
-
 tt:- dynamic llega/3.
-
 t6:- grafoCorrecto.
-%t7:- assert(llega(cordoba, roma, 16)).
-%t10:- retract(llega(cordoba, salta, 1)).
-t8:- grafoCorrecto.
+%test:- assert(llega(paris , roma, 1)),assert(llega(roma, edimburgo, 1)),assert(llega(edimburgo, paris, 1)), not(grafoCorrecto).
 
-t9:- cubreDistancia([rio, new_york, madrid, buenos_aires],X ), X==boeing_767.
-t9:- cubreDistancia([atlanta, new_york, madrid, lisboa],X ), X==boeing_767.
-t9:- cubreDistancia([atlanta, new_york, madrid, lisboa],X ), X==airbus_a320.
+t7:- cubreDistancia([rio, new_york, madrid, buenos_aires],X ), X==boeing_767.
+t7:- cubreDistancia([atlanta, new_york, madrid, lisboa],X ), X==boeing_767.
+t7:- cubreDistancia([atlanta, new_york, madrid, lisboa],X ), X==airbus_a320.
 
+%probamos algunos auxiliares,los que consideramos importantes.
+t8:-not(vueloSinTransbordo([(rio,[airbus_a320]), (buenos_aires, [airbus_a320, boeing_767]),(cordoba, [airbus_a320]), (atlanta, [boeing_747])],rio,atlanta,X,T)).
+t9:- vueloSinTransbordo([(rio,[airbus_a320]), (buenos_aires, [airbus_a320, boeing_767]),(cordoba, [airbus_a320]), (atlanta, [boeing_747])],buenos_aires,cordoba,T,A),T==2 ,A== airbus_a320.
+t9:- vueloSinTransbordo([(rio,[airbus_a320]), (buenos_aires, [airbus_a320, boeing_767]),(cordoba, [airbus_a320]), (atlanta, [boeing_747])],buenos_aires,cordoba,T,A),T==2 ,A== boeing_767.
+t10:- estaEnCiudad(airbus_a320,buenos_aires, [(rio,[airbus_a320]), (buenos_aires, [airbus_a320, boeing_767]),(cordoba, [airbus_a320]), (atlanta, [boeing_747])]).
+t11:- not(estaEnCiudad(boeing_747,buenos_aires, [(rio,[airbus_a320]), (buenos_aires, [airbus_a320, boeing_767]),(cordoba, [airbus_a320]), (atlanta, [boeing_747])])).
+t12:-esAerolinea([(rio,[airbus_a320]), (buenos_aires, [airbus_a320, boeing_767]),(cordoba, [airbus_a320]), (atlanta, [boeing_747])]).
 
-
+todoTest:- t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12.
 
 
 
