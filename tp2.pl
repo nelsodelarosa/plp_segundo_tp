@@ -17,6 +17,8 @@ llega(madrid, lisboa, 1).
 llega(madrid, buenos_aires, 12).
 llega(lisboa, madrid, 1).
 llega(new_york, buenos_aires, 11).
+llega(cordoba, roma, 16).
+
 
 %% Aviones y sus autonomías.
 
@@ -25,34 +27,29 @@ autonomia(boeing_767, 15).
 autonomia(airbus_a320, 9).
 autonomia(boeing_747, 10).
 
-% entre(X, Y, X) :- X =< Y.
-% entre(X, Y, Z) :- X < Y, N is X+1, entre(N, Y, Z).
-
-ciudad(buenos_aires).
-ciudad(mdq).
-ciudad(lisboa).
-ciudad(madrid).
-ciudad(new_york).
-ciudad(rio).
-ciudad(atlanta).
-ciudad(salta).
-ciudad(cordoba).
 
 %% Predicados pedidos:
 
 % ciudades(-Ciudades)
-ciudades(Xs):- setof(X,Y^Z^llega(X,Y,Z),Xs).
+ciudadesQueAlcanzan(Xs):-setof(X,Y^Z^llega(X,Y,Z),Xs).
+
+%ciudadesSonAlcanzadas(Xs):- setof(X,Y^Z^llega(Y,X,Z),Ls) .
+
+esCiudad(X):- llega(_,X,_).
+%esCiudad(X):- llega(X,_,_).
+destino(X):- llega(X,_,_).
+
+destinos(Xs):-setof(X,esCiudad(X),Xs).
+
+ciudades(Xs):- setof(X,(Y^Z^llega(X,Y,Z),Xs).
+
+
 
 
 % viajeDesde(+Origen,?Destino,-Recorrido,-Tiempo) -- Devuelve infinitos resultados.
 
-%primero([X],X).
-primero([X|_],X).
 
-% suma(?L,-X).
-suma([],0).
-suma([X|Xs], Y):- suma(Xs,K), Y is K+X. 
-% suma([X|Xs], Y):-   suma(Xs,K), K = (Y-X). 
+primero([X|_],X).
 
 ultimo(L,R):- append(_,[R],L).
 %viajeDesde(O,D,R,X):- primero(R,O), ultimo(R,D), tiempoRecorrido(R,X), esRuta(R).
@@ -67,10 +64,6 @@ esRuta([_]).
 esRuta([X,Y|Ts]):- llega(X,Y,_),esRuta([Y|Ts]).
 
 
-
-%esRutaSC([_]).
-%esRutaSC([X,Y|Ts]):-  llega(X,Y,_), esRutaSC([Y|Ts]),not(member(X,[Y|Ts])).
-
 esRutaSC([X], F2):-not(member(X,F2)).
 
 esRutaSC([X,Y|Ts], F):- llega(X,Y,_), not(member(X,F)), append([X],F,F2), esRutaSC([Y|Ts], F2).
@@ -80,7 +73,6 @@ esRutaSC([X,Y|Ts], F):- llega(X,Y,_), not(member(X,F)), append([X],F,F2), esRuta
 
 viajeSinCiclos(O,D,R,X):- primero(R,O), esRutaSC(R, []), tiempoRecorrido(R,X), ultimo(R,D).
 
-%viajeSinCiclos(O,D,R,X):- esCamino(O,D,R),tiempoRecorrido(R,X).
 
 % viajeMasCorto(+Origen,+Destino,-Recorrido,-Tiempo)
 
@@ -157,13 +149,22 @@ t5:- viajeMasCorto(buenos_aires,new_york,R,T), R==[buenos_aires, rio, new_york],
 
 t5:- viajeMasCorto(X,X,R,T), R==[X], T == 0.
 
+
+tt:- dynamic llega/3.
+
 t6:- grafoCorrecto.
-t7:- assert(llega(cordoba, roma, 16)).
+%t7:- assert(llega(cordoba, roma, 16)).
+%t10:- retract(llega(cordoba, salta, 1)).
 t8:- grafoCorrecto.
 
 t9:- cubreDistancia([rio, new_york, madrid, buenos_aires],X ), X==boeing_767.
 t9:- cubreDistancia([atlanta, new_york, madrid, lisboa],X ), X==boeing_767.
 t9:- cubreDistancia([atlanta, new_york, madrid, lisboa],X ), X==airbus_a320.
+
+
+
+
+
 
 % Descomentar si se usa un archivo separado para las pruebas.
 % - [pruebas].
