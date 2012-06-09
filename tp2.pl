@@ -47,12 +47,10 @@ ciudades(Xs):- setof(X,Y^Z^llega(X,Y,Z),Xs).
 primero([X|_],X).
 
 ultimo(L,R):- append(_,[R],L).
-%viajeDesde(O,D,R,X):- primero(R,O), ultimo(R,D), tiempoRecorrido(R,X), esRuta(R).
 
 viajeDesde(O,D,R,X):- primero(R,O), ultimo(R,D),  esRuta(R),tiempoRecorrido(R,X).
 
-
-tiempoRecorrido([X],0).
+tiempoRecorrido([_],0).
 tiempoRecorrido([X,Y|L],T):- llega(X,Y,Z),tiempoRecorrido([Y|L],K), T is K+Z.
 
 esRuta([_]).
@@ -81,10 +79,10 @@ viajeMasCorto(O,D,R,T):- viajes(O,D,Rs), menorTiempo(Rs,T),member(R,Rs),tiempoRe
 
 % grafoCorrecto
 
-alcanzaALasDemas(X,[]).
+alcanzaALasDemas(_,[]).
 alcanzaALasDemas(X,[Y|Ys]):- viajeSinCiclos(X,Y,_,_),alcanzaALasDemas(X,Ys).
 
-todasLLeganA([],Y).
+todasLLeganA([],_).
 todasLLeganA([X|Xs],Y):- viajeSinCiclos(X,Y,_,_),todasLLeganA(Xs,Y).
 
 grafoCorrecto:- ciudades(L),member(X,L),alcanzaALasDemas(X,L),todasLLeganA(L,X). 
@@ -105,20 +103,12 @@ sonAviones([X|Xs]):- aviones(Aviones), member(X,Aviones),sonAviones(Xs).
 esAerolinea([]).
 esAerolinea([(C,L)|Aes]):- ciudades(Ciudades),member(C,Ciudades),sonAviones(L),esAerolinea(Aes).  
 
-estaEnCiudad(A,Ciudad,[(C,L)|Aero]):- Ciudad == C, member(A,L).  
-estaEnCiudad(A,Ciudad,[(C,L)|Aero]):- Ciudad \= C , estaEnCiudad(A,Ciudad,Aero).
-
-
+estaEnCiudad(A,Ciudad,[(C,L)|_]):- Ciudad == C, member(A,L).  
+estaEnCiudad(A,Ciudad,[(C,_)|Aero]):- Ciudad \= C , estaEnCiudad(A,Ciudad,Aero).
 
 vueloSinTransbordo(Aero, Ciudad1, Ciudad2, Tiempo, Avion):- esAerolinea(Aero), 
 ciudades(Ciudades), member(Ciudad1,Ciudades),member(Ciudad2,Ciudades), estaEnCiudad(Avion,Ciudad1,Aero),
 viajeMasCorto(Ciudad1,Ciudad2,R,Tiempo), cubreDistancia(R,Avion).														
-
-
-%avionesDeAerolinea(Aero,Xs):- setof(A, Y^estaEnCiudad(A,Y,Aero),Xs).
-
-%ejemplo
-%[(rio,[airbus_a320]), (buenos_aires, [airbus_a320, boeing_767]),(cordoba, [airbus_a320]), (atlanta, [boeing_747])].
 
 
 %algunas pruebas
@@ -142,7 +132,7 @@ t5:- viajeMasCorto(X,X,R,T), R==[X], T == 0.
 
 tt:- dynamic llega/3.
 t6:- grafoCorrecto.
-%test:- assert(llega(paris , roma, 1)),assert(llega(roma, edimburgo, 1)),assert(llega(edimburgo, paris, 1)), not(grafoCorrecto).
+
 
 t7:- cubreDistancia([rio, new_york, madrid, buenos_aires],X ), X==boeing_767.
 t7:- cubreDistancia([atlanta, new_york, madrid, lisboa],X ), X==boeing_767.
@@ -157,8 +147,6 @@ t11:- not(estaEnCiudad(boeing_747,buenos_aires, [(rio,[airbus_a320]), (buenos_ai
 t12:-esAerolinea([(rio,[airbus_a320]), (buenos_aires, [airbus_a320, boeing_767]),(cordoba, [airbus_a320]), (atlanta, [boeing_747])]).
 
 todoTest:- t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12.
-
-
 
 % Descomentar si se usa un archivo separado para las pruebas.
 % - [pruebas].
