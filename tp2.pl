@@ -36,34 +36,36 @@ autonomia(boeing_747, 10).
 %% Predicados pedidos:
 
 % ciudades(-Ciudades)
-
 %asumo que todo nodo n d_out(n) >0. Consultado con gaby
 ciudades(Xs):- setof(X,Y^Z^llega(X,Y,Z),Xs).
 
 
 % viajeDesde(+Origen,?Destino,-Recorrido,-Tiempo) -- Devuelve infinitos resultados.
 
-
+%primero y ultimo de una lista
 primero([X|_],X).
-
 ultimo(L,R):- append(_,[R],L).
 
 viajeDesde(O,D,R,X):- primero(R,O), ultimo(R,D),  esRuta(R),tiempoRecorrido(R,X).
 
+%devuelve true si realizar el recorrido Rec en tiempo tiem
+%tiempoRecorrido(?Rec,?tiem)
 tiempoRecorrido([_],0).
 tiempoRecorrido([X,Y|L],T):- llega(X,Y,Z),tiempoRecorrido([Y|L],K), T is K+Z.
 
+%devuelve true si Rec es una luta valida(ciudades contiguas). 
+%esRuta(+Rec)
 esRuta([_]).
 esRuta([X,Y|Ts]):- llega(X,Y,_),esRuta([Y|Ts]).
 
-
+%devuelve true si Rec es un camino in ciclos y nadie del recorrido
+%esta en Visitados
+%esRutaSC(+Rec,+Visitados)
 esRutaSC([X], F2):-not(member(X,F2)).
-
 esRutaSC([X,Y|Ts], F):- llega(X,Y,_), not(member(X,F)), append([X],F,F2), esRutaSC([Y|Ts], F2).
 
 
 %viajeSinCiclos(+Origen,?Destino,-Recorrido,-Tiempo)
-
 viajeSinCiclos(O,D,R,X):- primero(R,O), esRutaSC(R, []), tiempoRecorrido(R,X), ultimo(R,D).
 
 
@@ -71,17 +73,36 @@ viajeSinCiclos(O,D,R,X):- primero(R,O), esRutaSC(R, []), tiempoRecorrido(R,X), u
 
 viajes(O,D,Rs):-setof(RR,Y^viajeSinCiclos(O,D,RR,Y),Rs).
 
+%Devuelve true si Tiempo es el timepo del recorrido mas corto.
+%menorTiempo(+Rec,+Tiempor)
 menorTiempo([A],T):- tiempoRecorrido(A,T).
 menorTiempo([A,B|Ts],T):- tiempoRecorrido(A,Ta), tiempoRecorrido(B,Tb),Ta >= Tb, menorTiempo([B|Ts],T). 
 menorTiempo([A,B|Ts],T):- tiempoRecorrido(A,Ta), tiempoRecorrido(B,Tb),Ta < Tb, menorTiempo([A|Ts],T). 
 
-viajeMasCorto(O,D,R,T):- viajes(O,D,Rs), menorTiempo(Rs,T),member(R,Rs),tiempoRecorrido(R,T).
+%viajeMasCorto(O,D,R,T):- viajes(O,D,Rs), menorTiempo(Rs,T),member(R,Rs),tiempoRecorrido(R,T).
+longitud([X],0).
+longitud([X,Y|Xs],N):- llega(X,Y,_),longitud([Y|Xs],K), N is K+1.
+
+frente(L,R):- ultimo(L,X), append(R,[X],L).
+
+viajeMasCorto(O,D,R,T):- viajeSinCiclos(O,D,R,T), not(hayMasCorto(O,D,R,T)).
+hayMasCorto(O,D,R,T):- viajeSinCiclos(O,D,R1,T1), T1 < T.
+
+
+
+
 
 % grafoCorrecto
 
+%devuelve true si hay un cammino sin ciclos desde Ciudad a cada elemento
+%de Ciudades
+%alcanzaALasDemas(+Ciudad,+Ciudades)
 alcanzaALasDemas(_,[]).
 alcanzaALasDemas(X,[Y|Ys]):- viajeSinCiclos(X,Y,_,_),alcanzaALasDemas(X,Ys).
 
+%devuelve true si hay un cammino sin ciclos desde cada elemento
+%de Ciudades hasta Ciudad
+%todasLLeganA(+Ciudades,+Ciudad)
 todasLLeganA([],_).
 todasLLeganA([X|Xs],Y):- viajeSinCiclos(X,Y,_,_),todasLLeganA(Xs,Y).
 
@@ -95,14 +116,20 @@ cubreDistancia([X,Y|Rs], A):- llega(X,Y,T),autonomia(A,Auto), T =< Auto, cubreDi
 
 % vueloSinTransbordo(+Aerolinea, +Ciudad1, +Ciudad2, ?Tiempo, ?Avion)
 
+
 aviones(Xs):- setof(A, Y^autonomia(A,Y),Xs).
 
+%devuelve true si la lista contiene solo aviones existentes.
 sonAviones([]).
 sonAviones([X|Xs]):- aviones(Aviones), member(X,Aviones),sonAviones(Xs).
 
+%devuelve true si es una aerolinea valida.
 esAerolinea([]).
 esAerolinea([(C,L)|Aes]):- ciudades(Ciudades),member(C,Ciudades),sonAviones(L),esAerolinea(Aes).  
 
+%devuelve true si Avion esta en la ciudad Ciudad en el estado de la
+%aerolinea Aerolinea.
+%estaEnCiudad(+Avion,+Ciudad+Aerolinea)
 estaEnCiudad(A,Ciudad,[(C,L)|_]):- Ciudad == C, member(A,L).  
 estaEnCiudad(A,Ciudad,[(C,_)|Aero]):- Ciudad \= C , estaEnCiudad(A,Ciudad,Aero).
 
