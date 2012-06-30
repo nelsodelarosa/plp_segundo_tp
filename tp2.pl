@@ -1,4 +1,5 @@
 %% Rutas aéreas predefinidas.
+:-dynamic llega/3.
 
 % llega(?origen, ?destino, ?tiempo)
 llega(buenos_aires, mdq, 1).
@@ -89,9 +90,6 @@ viajeMasCorto(O,D,R,T):- viajeSinCiclos(O,D,R,T), not(hayMasCorto(O,D,R,T)).
 hayMasCorto(O,D,R,T):- viajeSinCiclos(O,D,R1,T1), T1 < T.
 
 
-
-
-
 % grafoCorrecto
 
 %devuelve true si hay un cammino sin ciclos desde Ciudad a cada elemento
@@ -105,8 +103,12 @@ alcanzaALasDemas(X,[Y|Ys]):- viajeSinCiclos(X,Y,_,_),alcanzaALasDemas(X,Ys).
 %todasLLeganA(+Ciudades,+Ciudad)
 todasLLeganA([],_).
 todasLLeganA([X|Xs],Y):- viajeSinCiclos(X,Y,_,_),todasLLeganA(Xs,Y).
+%verifica que no haya ciudades con vuelos entrantes pero no salientes
 
-grafoCorrecto:- ciudades(L),member(X,L),alcanzaALasDemas(X,L),todasLLeganA(L,X). 
+hayCiudadMala:- llega(_,X,_),not(llega(X,_,_)).
+ciudadMala(X):- llega(_,X,_),not(llega(X,_,_)).
+
+grafoCorrecto:- not(hayCiudadMala),ciudades(L),member(X,L),alcanzaALasDemas(X,L),todasLLeganA(L,X) . 
 
 
 % cubreDistancia(+Recorrido, ?Avion)
@@ -121,22 +123,28 @@ aviones(Xs):- setof(A, Y^autonomia(A,Y),Xs).
 
 %devuelve true si la lista contiene solo aviones existentes.
 sonAviones([]).
-sonAviones([X|Xs]):- aviones(Aviones), member(X,Aviones),sonAviones(Xs).
+%sonAviones([X|Xs]):- aviones(Aviones), member(X,Aviones),sonAviones(Xs).
+sonAviones([X|Xs]):- autonomia(X,_),sonAviones(Xs).
 
 %devuelve true si es una aerolinea valida.
 esAerolinea([]).
-esAerolinea([(C,L)|Aes]):- ciudades(Ciudades),member(C,Ciudades),sonAviones(L),esAerolinea(Aes).  
+%esAerolinea([(C,L)|Aes]):- ciudades(Ciudades),member(C,Ciudades),sonAviones(L),esAerolinea(Aes).  
+esAerolinea([(C,L)|Aes]):- llega(C,_,_),sonAviones(L),esAerolinea(Aes).  
+
 
 %devuelve true si Avion esta en la ciudad Ciudad en el estado de la
 %aerolinea Aerolinea.
 %estaEnCiudad(+Avion,+Ciudad+Aerolinea)
-estaEnCiudad(A,Ciudad,[(C,L)|_]):- Ciudad == C, member(A,L).  
+%estaEnCiudad(A,Ciudad,[(C,L)|_]):- Ciudad == C, member(A,L).  
+estaEnCiudad(A,Ciudad,[(Ciudad,L)|_]):- member(A,L).  
 estaEnCiudad(A,Ciudad,[(C,_)|Aero]):- Ciudad \= C , estaEnCiudad(A,Ciudad,Aero).
 
-vueloSinTransbordo(Aero, Ciudad1, Ciudad2, Tiempo, Avion):- esAerolinea(Aero), 
-ciudades(Ciudades), member(Ciudad1,Ciudades),member(Ciudad2,Ciudades), estaEnCiudad(Avion,Ciudad1,Aero),
-viajeMasCorto(Ciudad1,Ciudad2,R,Tiempo), cubreDistancia(R,Avion).														
+%vueloSinTransbordo(Aero, Ciudad1, Ciudad2, Tiempo, Avion):- esAerolinea(Aero), 
+%ciudades(Ciudades), member(Ciudad1,Ciudades),member(Ciudad2,Ciudades), estaEnCiudad(Avion,Ciudad1,Aero),
+%viajeMasCorto(Ciudad1,Ciudad2,R,Tiempo), cubreDistancia(R,Avion).														
 
+vueloSinTransbordo(Aero, C1, C2, Tiempo, Avion):- esAerolinea(Aero),llega(C1,_,_),llega(C2,_,_),
+estaEnCiudad(Avion,C1,Aero),viajeMasCorto(C1,C2,R,Tiempo),cubreDistancia(R,Avion).
 
 %algunas pruebas
 t1:- ciudades(X), X == [atlanta, buenos_aires, cordoba, lisboa, madrid, mdq, new_york, rio, salta].
@@ -157,9 +165,10 @@ t5:- viajeMasCorto(buenos_aires,new_york,R,T), R==[buenos_aires, rio, new_york],
 
 t5:- viajeMasCorto(X,X,R,T), R==[X], T == 0.
 
-tt:- dynamic llega/3.
+:-retract(llega(salta, buenos_aires, 2)).
 t6:- grafoCorrecto.
-
+:-assert(llega(salta, buenos_aires, 2)).
+tt6:- grafoCorrecto.
 
 t7:- cubreDistancia([rio, new_york, madrid, buenos_aires],X ), X==boeing_767.
 t7:- cubreDistancia([atlanta, new_york, madrid, lisboa],X ), X==boeing_767.
