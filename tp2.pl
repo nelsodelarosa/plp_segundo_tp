@@ -19,13 +19,6 @@ llega(madrid, buenos_aires, 12).
 llega(lisboa, madrid, 1).
 llega(new_york, buenos_aires, 11).
 
-%agrega un triangulo dirigido deberia dar false grafoCorrecto
-%no lo pude hacer con los assert y retract 
-%llega(paris , roma, 1).
-%llega(roma, edimburgo, 1).
-%llega(edimburgo, paris, 1).
-
-
 %% Aviones y sus autonomías.
 
 % autonomia(?avion, ?horas)
@@ -41,12 +34,11 @@ autonomia(boeing_747, 10).
 ciudades(Xs):- setof(X,Y^Z^llega(X,Y,Z),Xs).
 
 
-% viajeDesde(+Origen,?Destino,-Recorrido,-Tiempo) -- Devuelve infinitos resultados.
-
 %primero y ultimo de una lista
 primero([X|_],X).
 ultimo(L,R):- append(_,[R],L).
 
+% viajeDesde(+Origen,?Destino,-Recorrido,-Tiempo) -- Devuelve infinitos resultados.
 viajeDesde(O,D,R,X):- primero(R,O), ultimo(R,D),  esRuta(R),tiempoRecorrido(R,X).
 
 %devuelve true si realizar el recorrido Rec en tiempo tiem
@@ -69,9 +61,6 @@ esRutaSC([X,Y|Ts], F):- llega(X,Y,_), not(member(X,F)), append([X],F,F2), esRuta
 %viajeSinCiclos(+Origen,?Destino,-Recorrido,-Tiempo)
 viajeSinCiclos(O,D,R,X):- primero(R,O), esRutaSC(R, []), tiempoRecorrido(R,X), ultimo(R,D).
 
-
-% viajeMasCorto(+Origen,+Destino,-Recorrido,-Tiempo)
-
 viajes(O,D,Rs):-setof(RR,Y^viajeSinCiclos(O,D,RR,Y),Rs).
 
 %Devuelve true si Tiempo es el timepo del recorrido mas corto.
@@ -80,7 +69,6 @@ menorTiempo([A],T):- tiempoRecorrido(A,T).
 menorTiempo([A,B|Ts],T):- tiempoRecorrido(A,Ta), tiempoRecorrido(B,Tb),Ta >= Tb, menorTiempo([B|Ts],T). 
 menorTiempo([A,B|Ts],T):- tiempoRecorrido(A,Ta), tiempoRecorrido(B,Tb),Ta < Tb, menorTiempo([A|Ts],T). 
 
-%viajeMasCorto(O,D,R,T):- viajes(O,D,Rs), menorTiempo(Rs,T),member(R,Rs),tiempoRecorrido(R,T).
 longitud([X],0).
 longitud([X,Y|Xs],N):- llega(X,Y,_),longitud([Y|Xs],K), N is K+1.
 
@@ -92,7 +80,7 @@ hayMasCorto(O,D,R,T):- viajeSinCiclos(O,D,R1,T1), T1 < T.
 
 % grafoCorrecto
 
-%devuelve true si hay un cammino sin ciclos desde Ciudad a cada elemento
+%devuelve true si hay un camino sin ciclos desde Ciudad a cada elemento
 %de Ciudades
 %alcanzaALasDemas(+Ciudad,+Ciudades)
 alcanzaALasDemas(_,[]).
@@ -112,37 +100,28 @@ grafoCorrecto:- not(hayCiudadMala),ciudades(L),member(X,L),alcanzaALasDemas(X,L)
 
 
 % cubreDistancia(+Recorrido, ?Avion)
-
 cubreDistancia([ _ ],_).
 cubreDistancia([X,Y|Rs], A):- llega(X,Y,T),autonomia(A,Auto), T =< Auto, cubreDistancia([Y|Rs],A).   
-
-% vueloSinTransbordo(+Aerolinea, +Ciudad1, +Ciudad2, ?Tiempo, ?Avion)
-
 
 aviones(Xs):- setof(A, Y^autonomia(A,Y),Xs).
 
 %devuelve true si la lista contiene solo aviones existentes.
 sonAviones([]).
-%sonAviones([X|Xs]):- aviones(Aviones), member(X,Aviones),sonAviones(Xs).
 sonAviones([X|Xs]):- autonomia(X,_),sonAviones(Xs).
 
 %devuelve true si es una aerolinea valida.
 esAerolinea([]).
-%esAerolinea([(C,L)|Aes]):- ciudades(Ciudades),member(C,Ciudades),sonAviones(L),esAerolinea(Aes).  
 esAerolinea([(C,L)|Aes]):- llega(C,_,_),sonAviones(L),esAerolinea(Aes).  
 
 
 %devuelve true si Avion esta en la ciudad Ciudad en el estado de la
 %aerolinea Aerolinea.
-%estaEnCiudad(+Avion,+Ciudad+Aerolinea)
-%estaEnCiudad(A,Ciudad,[(C,L)|_]):- Ciudad == C, member(A,L).  
+%estaEnCiudad(+Avion,+Ciudad, +Aerolinea)
 estaEnCiudad(A,Ciudad,[(Ciudad,L)|_]):- member(A,L).  
 estaEnCiudad(A,Ciudad,[(C,_)|Aero]):- Ciudad \= C , estaEnCiudad(A,Ciudad,Aero).
 
-%vueloSinTransbordo(Aero, Ciudad1, Ciudad2, Tiempo, Avion):- esAerolinea(Aero), 
-%ciudades(Ciudades), member(Ciudad1,Ciudades),member(Ciudad2,Ciudades), estaEnCiudad(Avion,Ciudad1,Aero),
-%viajeMasCorto(Ciudad1,Ciudad2,R,Tiempo), cubreDistancia(R,Avion).														
-
+											
+% vueloSinTransbordo(+Aerolinea, +Ciudad1, +Ciudad2, ?Tiempo, ?Avion)
 vueloSinTransbordo(Aero, C1, C2, Tiempo, Avion):- esAerolinea(Aero),llega(C1,_,_),llega(C2,_,_),
 estaEnCiudad(Avion,C1,Aero),viajeMasCorto(C1,C2,R,Tiempo),cubreDistancia(R,Avion).
 
@@ -183,6 +162,3 @@ t11:- not(estaEnCiudad(boeing_747,buenos_aires, [(rio,[airbus_a320]), (buenos_ai
 t12:-esAerolinea([(rio,[airbus_a320]), (buenos_aires, [airbus_a320, boeing_767]),(cordoba, [airbus_a320]), (atlanta, [boeing_747])]).
 
 todoTest:- t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12.
-
-% Descomentar si se usa un archivo separado para las pruebas.
-% - [pruebas].
